@@ -8,21 +8,33 @@ let proxyIP = '';
 let socks5Address = '';
 
 let addresses = [
-	//当sub为空时启用本地优选域名/优选IP，若不带端口号 TLS默认端口为443，#号后为备注别名
-	'cf.090227.xyz:443#加入我的频道t.me/CMLiussss解锁更多优选节点',
-	'time.is#你可以只放域名 如下',
-	'www.visa.com.sg',
-	'skk.moe#也可以放域名带端口 如下',
-	'www.wto.org:8443',
-	'www.csgo.com:2087#节点名放在井号之后即可',
-	'icook.hk#若不带端口号默认端口为443',
-	'104.17.152.41#IP也可以',
-	'[2606:4700:e7:25:4b9:f8f8:9bfb:774a]#IPv6也OK',
+		//当sub为空时启用本地优选域名/优选IP，若不带端口号 TLS默认端口为443，#号后为备注别名
+		'172.67.78.198',
+		'162.159.129.112',
+		'172.67.76.228',
+		'172.67.67.125',
+		'172.67.68.181',
+		'172.67.79.188',
+		'172.65.225.160',
+		'172.65.231.92',
+		'172.65.232.171',
+		'172.65.229.109',
+		'104.19.50.220',
+		'104.19.55.164',
+		'104.19.56.100',
+		'104.19.58.172',
+		'104.19.59.43',
+		'104.19.63.90',
+		'104.19.41.95',
+		'104.19.43.223',
+		'104.19.52.251',
+		'104.19.45.42',
 ];
 
 let sub = ''; 
 let subconverter = 'subapi-loadbalancing.pages.dev';// clash订阅转换后端，目前使用CM的订阅转换功能。自带虚假节点信息防泄露
 let subconfig = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini.ini"; //订阅配置文件
+let subProtocol = 'https';
 let RproxyIP = 'false';
 
 let addressesapi = [];
@@ -90,6 +102,12 @@ export default {
 			sub = env.SUB || sub;
 			if (url.searchParams.has('sub') && url.searchParams.get('sub') !== '') sub = url.searchParams.get('sub');
 			subconverter = env.SUBAPI || subconverter;
+			if( subconverter.includes("http://") ){
+				subconverter = subconverter.split("//")[1];
+				subProtocol = 'http';
+			} else {
+				subconverter = subconverter.split("//")[1] || subconverter;
+			}
 			subconfig = env.SUBCONFIG || subconfig;
 			FileName = env.SUBNAME || FileName;
 			RproxyIP = env.RPROXYIP || !proxyIP ? 'true' : 'false';
@@ -669,8 +687,8 @@ https://github.com/cmliu/epeius
 
 		let url = `https://${sub}/sub?host=${fakeHostName}&pw=${fakeUserID}&password=${fakeUserID}&epeius=cmliu&proxyip=${RproxyIP}`;
 		let isBase64 = true;
-		let newAddressesapi;
-		let newAddressescsv;
+		let newAddressesapi = [];
+		let newAddressescsv = [];
 
 		if (!sub || sub == "") {
 			if(hostName.includes('workers.dev') || hostName.includes('pages.dev')) {
@@ -704,13 +722,13 @@ https://github.com/cmliu/epeius
 
 		if (!userAgent.includes(('CF-Workers-SUB').toLowerCase())){
 			if ((userAgent.includes('clash') && !userAgent.includes('nekobox')) || ( _url.searchParams.has('clash'))) {
-				url = `https://${subconverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
+				url = `${subProtocol}://${subconverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 				isBase64 = false;
 			} else if (userAgent.includes('sing-box') || userAgent.includes('singbox') || _url.searchParams.has('singbox') || _url.searchParams.has('sb')) {
-				url = `https://${subconverter}/sub?target=singbox&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
+				url = `${subProtocol}://${subconverter}/sub?target=singbox&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 				isBase64 = false;
 			} else if (userAgent.includes('surge') || _url.searchParams.has('surge')) {
-				url = `https://${subconverter}/sub?target=surge&ver=4&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=true&fdn=false`;
+				url = `${subProtocol}://${subconverter}/sub?target=surge&ver=4&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=true&fdn=false`;
 				isBase64 = false;
 			}
 		}
@@ -727,10 +745,10 @@ https://github.com/cmliu/epeius
 				content = await response.text();
 			}
 
-			if (!_url.pathname.includes(`/${fakeUserID}`)) {
-				content = revertFakeInfo(content, password, hostName, isBase64);
-				if (userAgent.includes('surge') || _url.searchParams.has('surge')) content = surge(content, `https://${hostName}/${password}?surge`);	
-			} 
+			if (_url.pathname == `/${fakeUserID}`) return content;
+			
+			content = revertFakeInfo(content, password, hostName, isBase64);
+			if (userAgent.includes('surge') || _url.searchParams.has('surge')) content = surge(content, `https://${hostName}/${password}?surge`);	
 			return content;
 		} catch (error) {
 			console.error('Error fetching content:', error);
